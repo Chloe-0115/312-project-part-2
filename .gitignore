@@ -5,6 +5,8 @@
 *.tfstate
 *.tfstate.*
 .terraform.lock.hcl
+terraform/terraform.tfvars
+instance.env
 .DS_Store
 Thumbs.db
 .idea/
