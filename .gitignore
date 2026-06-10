@@ -1,0 +1,11 @@
+*.pem
+.env
+.aws/credentials
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
