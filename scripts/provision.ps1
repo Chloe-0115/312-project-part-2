@@ -7,8 +7,11 @@ $KeyName = "ProjectP2"
 $SgName = "ProjectP2"
 $InstanceName = "Project part 2"
 $InstanceType = "t3.small"
-# /32 means only this one IP can connect on port 22
-$SshCidr = "73.96.253.173/32"
+# Auto-detect your public IP so SSH is not blocked after an IP change.
+# Ref: https://docs.aws.amazon.com/cli/latest/reference/ec2/authorize-security-group-ingress.html
+$MyIp = (curl.exe -4 -s ifconfig.me).Trim()
+$SshCidr = "$MyIp/32"
+Write-Host "SSH will be allowed from $SshCidr"
 
 Write-Host "Getting default VPC..."
 # Ref: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-vpcs.html

@@ -12,25 +12,27 @@ $SetupScript = Join-Path $PSScriptRoot "setup-minecraft.sh"
 $SshOpts = @("-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=NUL", "-o", "LogLevel=ERROR")
 
 if (-not (Test-Path $EnvFile)) { throw "Run provision.ps1 first" }
-if (-not (Test-Path $Pem)) { throw "ProjectP2.pem not found" }
+if (-not (Test-Path $Pem)) { throw "ProjectP2.pem not found. Run create-key.ps1 first." }
+if ((Get-Item $Pem).Length -lt 100) { throw "ProjectP2.pem is empty or broken. Run create-key.ps1, then provision.ps1 again." }
 
 Get-Content $EnvFile | ForEach-Object {
     if ($_ -match '^([^=]+)=(.*)$') { Set-Variable -Name $Matches[1] -Value $Matches[2] }
 }
 
-Write-Host "Waiting for instance on $public_ip ..."
+Write-Host "Waiting for SSH on $public_ip (usually 1-3 minutes after provision) ..."
 # EC2 can be "running" before sshd is ready; poll until SSH responds.
 $ready = $false
-for ($i = 1; $i -le 30; $i++) {
-    # ssh writes warnings to stderr; set Continue so PowerShell does not treat them as fatal errors.
+for ($i = 1; $i -le 36; $i++) {
+    Write-Host "  attempt $i/36 ..."
     $ErrorActionPreference = "Continue"
     $result = & ssh -i $Pem @SshOpts -o ConnectTimeout=5 "ec2-user@$public_ip" "echo ok" 2>$null
     $exit = $LASTEXITCODE
     $ErrorActionPreference = "Stop"
     if ($exit -eq 0 -and $result -eq "ok") { $ready = $true; break }
-    Start-Sleep -Seconds 10
+    Start-Sleep -Seconds 5
 }
-if (-not $ready) { throw "Instance not ready on $public_ip" }
+if (-not $ready) { throw "SSH not ready on $public_ip after 3 minutes. Check security group port 22." }
+Write-Host "SSH is ready."
 
 Write-Host "Uploading setup script..."
 $ErrorActionPreference = "Continue"
